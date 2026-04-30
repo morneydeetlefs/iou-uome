@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>LendTrack</title>
+  <title>Uome</title>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -18,7 +18,7 @@
 
     <!-- Header -->
     <header class="bg-zinc-900 border-b border-zinc-800 p-4 flex justify-between items-center sticky top-0">
-      <h1 class="text-2xl font-bold text-emerald-400">LendTrack</h1>
+      <h1 class="text-2xl font-bold text-emerald-400">Uome</h1>
       <div class="flex gap-2">
         <button onclick="showTab(0)" id="tab0" class="tab-btn active px-4 py-1 rounded-full text-sm">Home</button>
         <button onclick="showTab(1)" id="tab1" class="tab-btn px-4 py-1 rounded-full text-sm">New</button>
@@ -50,7 +50,7 @@
     <!-- NEW IOU SCREEN -->
     <div id="screen-new" class="p-4 hidden">
       <h2 class="text-xl font-semibold mb-4">Create New IOU</h2>
-      
+
       <div class="flex gap-2 mb-6">
         <button onclick="setType('item')" id="type-item" class="flex-1 py-3 rounded-2xl bg-emerald-600 font-medium">Item</button>
         <button onclick="setType('money')" id="type-money" class="flex-1 py-3 rounded-2xl bg-zinc-700 font-medium">Money</button>
@@ -82,7 +82,7 @@
         <div id="money-fields" class="hidden">
           <label class="block text-sm text-zinc-400 mb-1">Amount (R)</label>
           <input id="amount" type="number" step="0.01" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3" placeholder="250"/>
-          
+
           <label class="block text-sm text-zinc-400 mt-4 mb-1">Interest % (optional, per month)</label>
           <input id="interest" type="number" step="0.1" value="0" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3"/>
         </div>
