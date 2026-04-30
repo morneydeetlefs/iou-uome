@@ -249,32 +249,22 @@ function showDetail(id) {
   currentEditingId = id;
 
   let content = `
-    <div class="space-y-6">
-      ${iou.photoBase64 ? `<img src="${iou.photoBase64}" class="w-full rounded-2xl">` : ''}
-      <div>
-        <p class="text-2xl font-semibold">${iou.description}</p>
-        <p class="text-zinc-400">${iou.otherParty}</p>
-      </div>
-      <div class="grid grid-cols-2 gap-4 text-sm">
-        <div>
-          <p class="text-zinc-500">Due</p>
-          <p>${new Date(iou.dueDate).toLocaleDateString('en-ZA')}</p>
-        </div>
-        ${iou.type === 'money' ? `
-        <div>
-          <p class="text-zinc-500">Amount</p>
-          <p>R ${Number(iou.amount).toFixed(2)}</p>
-        </div>` : ''}
-      </div>
-      ${iou.notes ? `<p class="text-sm text-zinc-400">${iou.notes}</p>` : ''}
+    <div class="flex flex-col gap-3">
+  <button onclick="shareViaWhatsApp()"
+          class="w-full py-4 bg-green-600 hover:bg-green-700 rounded-2xl font-medium">
+    Share via WhatsApp
+  </button>
 
-      <div class="flex gap-3">
-        <button onclick="markReturned()" class="flex-1 py-4 bg-emerald-600 rounded-2xl font-medium">Mark as Returned</button>
-        <button onclick="showQRModal(currentIOUs.find(i=>i.id===currentEditingId))" class="flex-1 py-4 bg-zinc-700 rounded-2xl font-medium">Show QR</button>
-      </div>
+  <button onclick="copyShareableText()"
+          class="w-full py-4 bg-zinc-700 hover:bg-zinc-600 rounded-2xl font-medium">
+    Copy Shareable Text
+  </button>
 
-      <button onclick="shareViaWhatsApp()" class="w-full py-4 border border-zinc-600 rounded-2xl">Share via WhatsApp / SMS</button>
-    </div>
+  <button onclick="showQRModal(currentIOUs.find(i=>i.id===currentEditingId))"
+          class="w-full py-4 bg-blue-600 hover:bg-blue-700 rounded-2xl font-medium">
+    Show QR Code (for other person to scan)
+  </button>
+</div>
   `;
 
   document.getElementById("modal-content").innerHTML = content;
@@ -349,6 +339,56 @@ function shareViaWhatsApp() {
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.classList.add('active', 'bg-zinc-800');
 });
+
+// ====================== IMPROVED SHARING - Option C ======================
+
+function generateShareableText(iou) {
+  const dueDate = new Date(iou.dueDate).toLocaleDateString('en-ZA');
+  let text = `Hey ${iou.otherParty},\n\n`;
+
+  text += `This is our agreement recorded on Uome:\n\n`;
+
+  if (iou.type === 'money') {
+    text += `Amount: R${Number(iou.amount).toFixed(2)}\n`;
+  }
+
+  text += `Item/Description: ${iou.description}\n`;
+  text += `Due Date: ${dueDate}\n\n`;
+
+  if (iou.notes) {
+    text += `Notes: ${iou.notes}\n\n`;
+  }
+
+  text += `Please reply with: *I accept*  so we both have confirmation.\n\n`;
+  text += `Recorded on ${new Date(iou.createdAt).toLocaleDateString('en-ZA')} via Uome\n`;
+  text += `Thanks!`;
+
+  return text;
+}
+
+function shareViaWhatsApp() {
+  const iou = currentIOUs.find(i => i.id === currentEditingId);
+  if (!iou) return;
+
+  const message = generateShareableText(iou);
+
+  // Open WhatsApp with pre-filled message
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  window.open(whatsappUrl, '_blank');
+}
+
+function copyShareableText() {
+  const iou = currentIOUs.find(i => i.id === currentEditingId);
+  if (!iou) return;
+
+  const message = generateShareableText(iou);
+
+  navigator.clipboard.writeText(message).then(() => {
+    alert("Shareable text copied to clipboard!\n\nPaste it in WhatsApp or send to the other person.");
+  }).catch(() => {
+    alert("Failed to copy. Please try again.");
+  });
+}
 
 // Start the app
 initDB();
