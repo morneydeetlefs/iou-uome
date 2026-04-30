@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LendTrack</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; }
+    .overdue { animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen">
+  <div class="max-w-md mx-auto">
+
+    <!-- Header -->
+    <header class="bg-zinc-900 border-b border-zinc-800 p-4 flex justify-between items-center sticky top-0">
+      <h1 class="text-2xl font-bold text-emerald-400">LendTrack</h1>
+      <div class="flex gap-2">
+        <button onclick="showTab(0)" id="tab0" class="tab-btn active px-4 py-1 rounded-full text-sm">Home</button>
+        <button onclick="showTab(1)" id="tab1" class="tab-btn px-4 py-1 rounded-full text-sm">New</button>
+      </div>
+    </header>
+
+    <!-- HOME SCREEN -->
+    <div id="screen-home" class="p-4">
+      <div class="mb-6">
+        <h2 class="text-lg font-semibold mb-3">Overdue / Due Soon</h2>
+        <div id="overdue-list" class="space-y-3"></div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 mb-6">
+        <div onclick="filterList('lent')" class="bg-zinc-900 p-4 rounded-2xl cursor-pointer">
+          <p class="text-zinc-400 text-sm">I Lent Out</p>
+          <p id="lent-count" class="text-3xl font-bold text-emerald-400">0</p>
+        </div>
+        <div onclick="filterList('borrowed')" class="bg-zinc-900 p-4 rounded-2xl cursor-pointer">
+          <p class="text-zinc-400 text-sm">I Borrowed</p>
+          <p id="borrowed-count" class="text-3xl font-bold text-amber-400">0</p>
+        </div>
+      </div>
+
+      <h2 class="text-lg font-semibold mb-3">All IOUs</h2>
+      <div id="all-list" class="space-y-3"></div>
+    </div>
+
+    <!-- NEW IOU SCREEN -->
+    <div id="screen-new" class="p-4 hidden">
+      <h2 class="text-xl font-semibold mb-4">Create New IOU</h2>
+      
+      <div class="flex gap-2 mb-6">
+        <button onclick="setType('item')" id="type-item" class="flex-1 py-3 rounded-2xl bg-emerald-600 font-medium">Item</button>
+        <button onclick="setType('money')" id="type-money" class="flex-1 py-3 rounded-2xl bg-zinc-700 font-medium">Money</button>
+      </div>
+
+      <div class="space-y-5">
+        <div id="item-fields">
+          <label class="block text-sm text-zinc-400 mb-1">Photo (optional but recommended)</label>
+          <input type="file" id="photo-input" accept="image/*" class="block w-full text-sm text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:bg-zinc-800 file:text-white"/>
+          <div id="photo-preview" class="mt-3 hidden"></div>
+        </div>
+
+        <div>
+          <label class="block text-sm text-zinc-400 mb-1">Description</label>
+          <input id="description" type="text" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3" placeholder="AC/DC Back in Black CD or Lawnmower"/>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm text-zinc-400 mb-1">Other Party</label>
+            <input id="other-party" type="text" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3" placeholder="John or +27..."/>
+          </div>
+          <div>
+            <label class="block text-sm text-zinc-400 mb-1">Return / Due Date</label>
+            <input id="due-date" type="date" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3"/>
+          </div>
+        </div>
+
+        <div id="money-fields" class="hidden">
+          <label class="block text-sm text-zinc-400 mb-1">Amount (R)</label>
+          <input id="amount" type="number" step="0.01" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3" placeholder="250"/>
+          
+          <label class="block text-sm text-zinc-400 mt-4 mb-1">Interest % (optional, per month)</label>
+          <input id="interest" type="number" step="0.1" value="0" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3"/>
+        </div>
+
+        <div>
+          <label class="block text-sm text-zinc-400 mb-1">Notes / Condition</label>
+          <textarea id="notes" class="w-full bg-zinc-900 border border-zinc-700 rounded-3xl px-4 py-3 h-24" placeholder="Good condition, no scratches..."></textarea>
+        </div>
+
+        <button onclick="createIOU()" class="w-full bg-emerald-500 hover:bg-emerald-600 py-4 rounded-3xl font-semibold text-lg">
+          Create & Get QR Code
+        </button>
+      </div>
+    </div>
+
+    <!-- IOU DETAIL MODAL -->
+    <div id="modal" class="hidden fixed inset-0 bg-black/80 flex items-end">
+      <div class="bg-zinc-900 w-full rounded-t-3xl p-6 max-h-[85vh] overflow-auto">
+        <div class="flex justify-between items-center mb-6">
+          <h3 id="modal-title" class="text-xl font-semibold"></h3>
+          <button onclick="closeModal()" class="text-3xl leading-none">×</button>
+        </div>
+        <div id="modal-content" class="space-y-6"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
